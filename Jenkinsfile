@@ -3,56 +3,60 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'integracion-continua-app'
+        CONTAINER_NAME = 'integracion-continua-app'
     }
 
     stages {
         stage('Checkout') {
             steps {
                 git url: 'https://github.com/janaldana2025/integracion-continua.git',
-            branch: 'main',
-            credentialsId: 'github-jenkins'
+                branch: 'main',
+                credentialsId: 'github-jenkins'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    sh 'docker build -t integracion-continua-app .'
-                }
+                sh 'docker build -t integracion-continua-app .'
             }
         }
 
-        stage('Deploy with Docker Compose') {
+        stage('Deploy App Container') {
             steps {
                 sh '''
-                docker-compose stop app || true
-                docker-compose rm -f app || true
-                docker-compose up -d --build app
+                # detener y eliminar contenedor previo
+                docker stop integracion-continua-app || true
+                docker rm integracion-continua-app || true
+
+                # ejecutar la aplicación
+                docker run -d \
+                    --name integracion-continua-app \
+                    -p 5000:5000 \
+                    integracion-continua-app
                 '''
             }
         }
 
         stage('Smoke Test') {
             steps {
-                script {
-                    echo 'Probando que la aplicación responde...'
-                    sh 'sleep 5'
-                    sh 'curl -I http://localhost:5000 || true'
-                }
+                sh '''
+                echo "Esperando 5 segundos..."
+                sleep 5
+                curl -I http://localhost:5000 || true
+                '''
             }
         }
 
         stage('Logs') {
             steps {
-                sh 'docker compose logs --tail=50'
+                sh 'docker logs --tail 50 integracion-continua-app'
             }
         }
     }
 
     post {
         always {
-            echo 'Limpiando contenedores antiguos (solo app)...'
-            sh 'docker rm -f integracion-continua-app || true'
+            echo 'Pipeline finalizado'
         }
     }
 }
