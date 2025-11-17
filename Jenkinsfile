@@ -25,8 +25,9 @@ pipeline {
         stage('Deploy with Docker Compose') {
             steps {
                 sh '''
-                docker-compose down || true
-                docker-compose up -d --build
+                docker-compose stop app || true
+                docker-compose rm -f app || true
+                docker-compose up -d --build app
                 '''
             }
         }
@@ -50,8 +51,8 @@ pipeline {
 
     post {
         always {
-            echo 'Limpiando contenedores...'
-            sh 'docker compose down'
+            echo 'Limpiando contenedores antiguos (solo app)...'
+            sh 'docker rm -f integracion-continua-app || true'
         }
     }
 }
