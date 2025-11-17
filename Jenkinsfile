@@ -2,15 +2,15 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "integracion-continua-app"
+        DOCKER_IMAGE = 'integracion-continua-app'
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 git url: 'https://github.com/janaldana2025/integracion-continua.git',
-                    credentialsId: 'github-jenkins'
+            branch: 'main',
+            credentialsId: 'github-jenkins'
             }
         }
 
@@ -34,7 +34,7 @@ pipeline {
         stage('Smoke Test') {
             steps {
                 script {
-                    echo "Probando que la aplicación responde..."
+                    echo 'Probando que la aplicación responde...'
                     sh 'sleep 5'
                     sh 'curl -I http://localhost:5000 || true'
                 }
